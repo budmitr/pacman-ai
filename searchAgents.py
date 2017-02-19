@@ -280,14 +280,12 @@ class CornersProblem(search.SearchProblem):
     
   def getStartState(self):
     "Returns the start state (in your state space, not the full Pacman state space)"
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-    
+    return tuple(list(self.startingPosition) + [1 if self.startingPosition == c else 0 for c in self.corners])
+
   def isGoalState(self, state):
     "Returns whether this search state is a goal state of the problem"
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-       
+    return state[2:] == (1, 1, 1, 1)
+
   def getSuccessors(self, state):
     """
     Returns successor states, the actions they require, and a cost of 1.
@@ -309,7 +307,20 @@ class CornersProblem(search.SearchProblem):
       #   nextx, nexty = int(x + dx), int(y + dy)
       #   hitsWall = self.walls[nextx][nexty]
       
-      "*** YOUR CODE HERE ***"
+      x, y = state[:2]
+      dx, dy = Actions.directionToVector(action)
+      nextx, nexty = int(x + dx), int(y + dy)
+      if not self.walls[nextx][nexty]:
+        nextState = [nextx, nexty]
+        for i in range(2, 6):
+          corner_state = 0
+          if state[i] == 1 or (nextx, nexty) == self.corners[i-2]:
+            corner_state = 1
+          nextState += [corner_state]
+
+        nextState = tuple(nextState)
+        cost = 1
+        successors.append( ( nextState, action, cost) )
       
     self._expanded += 1
     return successors
@@ -343,9 +354,17 @@ def cornersHeuristic(state, problem):
   """
   corners = problem.corners # These are the corner coordinates
   walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
-  
-  "*** YOUR CODE HERE ***"
-  return 0 # Default to trivial solution
+
+  res = 0
+  position = state[:2]
+  for i in range(4):
+    if state[i + 2] == 1:
+      continue
+
+    crnr = corners[i]
+    res += int(abs(position[0] - crnr[0]) + abs(position[1] - crnr[1]))
+
+  return res
 
 class AStarCornersAgent(SearchAgent):
   "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
