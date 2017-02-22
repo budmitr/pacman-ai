@@ -428,35 +428,63 @@ class AStarFoodSearchAgent(SearchAgent):
     self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
     self.searchType = FoodSearchProblem
 
+
 def foodHeuristic(state, problem):
-  """
-  Your heuristic for the FoodSearchProblem goes here.
-  
-  This heuristic must be consistent to ensure correctness.  First, try to come up
-  with an admissible heuristic; almost all admissible heuristics will be consistent
-  as well.
-  
-  If using A* ever finds a solution that is worse uniform cost search finds,
-  your heuristic is *not* consistent, and probably not admissible!  On the other hand,
-  inadmissible or inconsistent heuristics may find optimal solutions, so be careful.
-  
-  The state is a tuple ( pacmanPosition, foodGrid ) where foodGrid is a 
-  Grid (see game.py) of either True or False. You can call foodGrid.asList()
-  to get a list of food coordinates instead.
-  
-  If you want access to info like walls, capsules, etc., you can query the problem.
-  For example, problem.walls gives you a Grid of where the walls are.
-  
-  If you want to *store* information to be reused in other calls to the heuristic,
-  there is a dictionary called problem.heuristicInfo that you can use. For example,
-  if you only want to count the walls once and store that value, try:
-    problem.heuristicInfo['wallCount'] = problem.walls.count()
-  Subsequent calls to this heuristic can access problem.heuristicInfo['wallCount']
-  """
-  position, foodGrid = state
-  "*** YOUR CODE HERE ***"
-  return 0
-  
+    """
+    Your heuristic for the FoodSearchProblem goes here.
+
+    This heuristic must be consistent to ensure correctness.  First, try to come up
+    with an admissible heuristic; almost all admissible heuristics will be consistent
+    as well.
+
+    If using A* ever finds a solution that is worse uniform cost search finds,
+    your heuristic is *not* consistent, and probably not admissible!  On the other hand,
+    inadmissible or inconsistent heuristics may find optimal solutions, so be careful.
+
+    The state is a tuple ( pacmanPosition, foodGrid ) where foodGrid is a
+    Grid (see game.py) of either True or False. You can call foodGrid.asList()
+    to get a list of food coordinates instead.
+
+    If you want access to info like walls, capsules, etc., you can query the problem.
+    For example, problem.walls gives you a Grid of where the walls are.
+
+    If you want to *store* information to be reused in other calls to the heuristic,
+    there is a dictionary called problem.heuristicInfo that you can use. For example,
+    if you only want to count the walls once and store that value, try:
+      problem.heuristicInfo['wallCount'] = problem.walls.count()
+    Subsequent calls to this heuristic can access problem.heuristicInfo['wallCount']
+    """
+    position, foodGrid = state
+
+    # default zero-heuristic
+    # Path found with total cost of 60 in 3.5 seconds
+    # Search nodes expanded: 15739
+    # return 0
+
+    food_list = foodGrid.asList()
+
+    # how much food left -- relaxed problem if pacman could teleport :)
+    # Path found with total cost of 60 in 2.7 seconds
+    # Search nodes expanded: 12394
+    # return len(food_list)
+
+    # If pacman could pass the walls, sequentially try to eat closest dots
+    # Path found with total cost of 60 in 1.6 seconds
+    # Search nodes expanded: 6007
+    def get_closest_food(pos, foods):
+        if not len(foods):
+            return []
+
+        distances = [util.manhattanDistance(pos, f) for f in foods]
+        zippedfoods = zip(foods, distances)
+        sortedfoods = sorted(zippedfoods, key=lambda posdis: posdis[1])
+        return [sortedfoods[0][1]] + get_closest_food(sortedfoods[0][0], [p for p, d in sortedfoods[1:]])
+
+    sequential_distances = get_closest_food(position, food_list)
+    cost = sum(sequential_distances)
+    return cost
+
+
 class ClosestDotSearchAgent(SearchAgent):
   "Search for all food using a sequence of searches"
   def registerInitialState(self, state):
