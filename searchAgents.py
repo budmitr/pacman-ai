@@ -510,9 +510,9 @@ class ClosestDotSearchAgent(SearchAgent):
     walls = gameState.getWalls()
     problem = AnyFoodSearchProblem(gameState)
 
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-  
+    path = search.aStarSearch(problem, manhattanHeuristic)
+    return path
+
 class AnyFoodSearchProblem(PositionSearchProblem):
   """
     A search problem for finding a path to any food.
@@ -545,9 +545,20 @@ class AnyFoodSearchProblem(PositionSearchProblem):
     that will complete the problem definition.
     """
     x,y = state
-    
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    food_list = self.food.asList()
+
+    # all the food is eaten! we won!
+    if not len(food_list):
+      return True
+
+    distances = [util.manhattanDistance(state, f) for f in food_list]
+    zippedfoods = zip(food_list, distances)
+    sortedfoods = sorted(zippedfoods, key=lambda posdis: posdis[1])
+    closest_food = sortedfoods[0][0]
+    self.goal = closest_food
+
+    return state == self.goal
 
 ##################
 # Mini-contest 1 #
